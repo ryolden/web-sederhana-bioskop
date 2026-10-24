@@ -13,13 +13,33 @@ import (
 var app *gin.Engine
 
 func init() {
+	gin.SetMode(gin.ReleaseMode)
+	app = gin.New()
+
+	// Recovery middleware mencegah serverless crash total saat ada panic
+	app.Use(gin.Recovery())
+
+	// Endpoint testing root (tanpa koneksi DB)
+	app.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "ok",
+			"message": "Bioskop API Serverless is running",
+		})
+	})
+
 	db := config.InitDB()
+	if db == nil {
+		app.GET("/bioskop", func(c *gin.Context) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Gagal terhubung ke database. Periksa POSTGRES_URL di Vercel.",
+			})
+		})
+		return
+	}
 
 	bioskopRepo := repository.NewBioskopRepository(db)
 	bioskopService := service.NewBioskopService(bioskopRepo)
 	bioskopHandler := handler.NewBioskopHandler(bioskopService)
-
-	app = gin.Default()
 
 	app.POST("/bioskop", bioskopHandler.CreateBioskop)
 	app.GET("/bioskop", bioskopHandler.GetAllBioskop)
