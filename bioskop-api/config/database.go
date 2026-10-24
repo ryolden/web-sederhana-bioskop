@@ -9,29 +9,29 @@ import (
 )
 
 func InitDB() *sql.DB {
-	// Cek environment variable dari Vercel
+	// Ambil string koneksi dari Vercel
 	connStr := os.Getenv("POSTGRES_URL")
 	if connStr == "" {
 		connStr = os.Getenv("DATABASE_URL")
 	}
 
-	// Jika variabel belum ada di Vercel, hindari koneksi ke localhost
+	// JIKA KOSONG: Langsung stop di sini, JANGAN coba ke 127.0.0.1
 	if connStr == "" {
-		log.Println("WARNING: POSTGRES_URL atau DATABASE_URL tidak ditemukan di Environment Variables.")
+		log.Println("[INFO] POSTGRES_URL / DATABASE_URL belum terbaca dari Vercel Env.")
 		return nil
 	}
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Println("Gagal sql.Open:", err)
+		log.Println("[ERROR] sql.Open gagal:", err)
 		return nil
 	}
 
 	if err = db.Ping(); err != nil {
-		log.Println("Gagal db.Ping ke database:", err)
+		log.Println("[ERROR] db.Ping gagal:", err)
 		return nil
 	}
 
-	log.Println("Berhasil terhubung ke database!")
+	log.Println("[SUCCESS] Terhubung ke PostgreSQL Neon!")
 	return db
 }
