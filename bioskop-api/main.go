@@ -26,5 +26,5 @@ func main() {
 	router.PUT("/bioskop/:id", bioskopHandler.UpdateBioskop)
 	router.DELETE("/bioskop/:id", bioskopHandler.DeleteBioskop)
 
-	router.Run(":8081")
+	router.Run(":8080")
 }

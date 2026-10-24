@@ -10,10 +10,18 @@ import (
 )
 
 func InitDB() *sql.DB {
+	// 1. Cek beberapa kemungkinan nama variabel koneksi Vercel Postgres
 	connStr := os.Getenv("POSTGRES_URL")
-
 	if connStr == "" {
-		log.Println("WARNING: POSTGRES_URL tidak ditemukan, menggunakan fallback localhost")
+		connStr = os.Getenv("DATABASE_URL")
+	}
+	if connStr == "" {
+		connStr = os.Getenv("POSTGRES_URL_NON_POOLING")
+	}
+
+	// 2. Jika semua variabel Vercel kosong, baru gunakan fallback local
+	if connStr == "" {
+		log.Println("WARNING: Environment variable database tidak ditemukan. Menggunakan fallback local.")
 		host := getEnv("DB_HOST", "localhost")
 		port := getEnv("DB_PORT", "5432")
 		user := getEnv("DB_USER", "postgres")
@@ -35,7 +43,7 @@ func InitDB() *sql.DB {
 		return nil
 	}
 
-	log.Println("Berhasil terhubung ke PostgreSQL!")
+	log.Println("Berhasil terhubung ke database!")
 	return db
 }
 
