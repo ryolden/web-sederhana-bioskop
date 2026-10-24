@@ -6,6 +6,7 @@ import (
 	"bioskop-api/repository"
 	"bioskop-api/service"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,33 +18,35 @@ func init() {
 	app = gin.New()
 	app.Use(gin.Recovery())
 
-	// Endpoint testing / health check
+	// Endpoint testing root (tidak akan pernah crash)
 	app.GET("/", func(c *gin.Context) {
+		hasEnv := os.Getenv("POSTGRES_URL") != "" || os.Getenv("DATABASE_URL") != ""
+
 		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"message": "Bioskop API Serverless is running",
+			"status":     "ok",
+			"message":    "Bioskop API Serverless is running",
+			"has_db_env": hasEnv,
 		})
 	})
 
 	db := config.InitDB()
-	if db == nil {
+	if db != nil {
+		bioskopRepo := repository.NewBioskopRepository(db)
+		bioskopService := service.NewBioskopService(bioskopRepo)
+		bioskopHandler := handler.NewBioskopHandler(bioskopService)
+
+		app.POST("/bioskop", bioskopHandler.CreateBioskop)
+		app.GET("/bioskop", bioskopHandler.GetAllBioskop)
+		app.GET("/bioskop/:id", bioskopHandler.GetBioskopByID)
+		app.PUT("/bioskop/:id", bioskopHandler.UpdateBioskop)
+		app.DELETE("/bioskop/:id", bioskopHandler.DeleteBioskop)
+	} else {
 		app.GET("/bioskop", func(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Gagal terhubung ke database. Pastikan POSTGRES_URL dikonfigurasi di Vercel.",
+				"error": "Gagal terhubung ke database. Pastikan POSTGRES_URL sudah ada di Settings > Environment Variables Vercel.",
 			})
 		})
-		return
 	}
-
-	bioskopRepo := repository.NewBioskopRepository(db)
-	bioskopService := service.NewBioskopService(bioskopRepo)
-	bioskopHandler := handler.NewBioskopHandler(bioskopService)
-
-	app.POST("/bioskop", bioskopHandler.CreateBioskop)
-	app.GET("/bioskop", bioskopHandler.GetAllBioskop)
-	app.GET("/bioskop/:id", bioskopHandler.GetBioskopByID)
-	app.PUT("/bioskop/:id", bioskopHandler.UpdateBioskop)
-	app.DELETE("/bioskop/:id", bioskopHandler.DeleteBioskop)
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
