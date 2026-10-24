@@ -45,7 +45,7 @@ func (r *bioskopRepository) GetAll(ctx context.Context) ([]entity.Bioskop, error
 		bioskops = append(bioskops, b)
 	}
 
-	// Pengecekan error setelah iterasi selesai
+	// cek error setelah iterasi selesai
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}

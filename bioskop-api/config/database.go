@@ -10,25 +10,29 @@ import (
 )
 
 func InitDB() *sql.DB {
-	host := getEnv("DB_HOST", "localhost")
-	port := getEnv("DB_PORT", "5432")
-	user := getEnv("DB_USER", "postgres")
-	password := getEnv("DB_PASSWORD", "postgre")
-	dbname := getEnv("DB_NAME", "bioskop_db")
 
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	connStr := os.Getenv("POSTGRES_URL")
 
-	db, err := sql.Open("postgres", psqlInfo)
+	if connStr == "" {
+		host := getEnv("DB_HOST", "localhost")
+		port := getEnv("DB_PORT", "5432")
+		user := getEnv("DB_USER", "postgres")
+		password := getEnv("DB_PASSWORD", "postgres")
+		dbname := getEnv("DB_NAME", "bioskop_db")
+
+		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			host, port, user, password, dbname)
+	}
+
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf("Gagal membuka koneksi database: %v", err)
+		log.Fatalf("Gagal terhubung ke database: %v", err)
 	}
 
-	if err := db.Ping(); err != nil {
-		log.Fatalf("Gagal terhubung ke PostgreSQL: %v", err)
+	if err = db.Ping(); err != nil {
+		log.Fatalf("Database tidak merespon: %v", err)
 	}
 
-	log.Println("Berhasil terhubung ke database PostgreSQL!")
 	return db
 }
 
