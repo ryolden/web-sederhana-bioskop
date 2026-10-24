@@ -5,6 +5,7 @@ import (
 	"bioskop-api/handler"
 	"bioskop-api/repository"
 	"bioskop-api/service"
+	"log"
 	"net/http"
 	"os"
 
@@ -18,10 +19,10 @@ func main() {
 	}
 
 	gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
+	router := gin.Default()
 
-	// Endpoint Diagnostik (Akan selalu HTTP 200 OK)
-	r.GET("/", func(c *gin.Context) {
+	// Route root untuk health check diagnostic
+	router.GET("/", func(c *gin.Context) {
 		hasEnv := os.Getenv("POSTGRES_URL") != "" || os.Getenv("DATABASE_URL") != ""
 		c.JSON(http.StatusOK, gin.H{
 			"status":     "ok",
@@ -32,24 +33,27 @@ func main() {
 
 	db := config.InitDB()
 
-	// Hanya daftarkan route DB jika db TIDAK nil (mencegah nil pointer crash)
+	// Hanya eksekusi DB jika db TIDAK nil
 	if db != nil {
+		defer db.Close()
+
 		bioskopRepo := repository.NewBioskopRepository(db)
 		bioskopService := service.NewBioskopService(bioskopRepo)
 		bioskopHandler := handler.NewBioskopHandler(bioskopService)
 
-		r.POST("/bioskop", bioskopHandler.CreateBioskop)
-		r.GET("/bioskop", bioskopHandler.GetAllBioskop)
-		r.GET("/bioskop/:id", bioskopHandler.GetBioskopByID)
-		r.PUT("/bioskop/:id", bioskopHandler.UpdateBioskop)
-		r.DELETE("/bioskop/:id", bioskopHandler.DeleteBioskop)
+		router.POST("/bioskop", bioskopHandler.CreateBioskop)
+		router.GET("/bioskop", bioskopHandler.GetAllBioskop)
+		router.GET("/bioskop/:id", bioskopHandler.GetBioskopByID)
+		router.PUT("/bioskop/:id", bioskopHandler.UpdateBioskop)
+		router.DELETE("/bioskop/:id", bioskopHandler.DeleteBioskop)
 	} else {
-		r.GET("/bioskop", func(c *gin.Context) {
+		router.GET("/bioskop", func(c *gin.Context) {
 			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"error": "Database belum terhubung. Pastikan POSTGRES_URL sudah ada di Vercel Settings > Environment Variables.",
+				"error": "Database tidak terhubung. Cek POSTGRES_URL di Vercel Environment Variables.",
 			})
 		})
 	}
 
-	r.Run(":" + port)
+	log.Printf("Server running on port %s", port)
+	router.Run(":" + port)
 }
