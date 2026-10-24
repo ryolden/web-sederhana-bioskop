@@ -13,6 +13,7 @@ func InitDB() *sql.DB {
 	connStr := os.Getenv("POSTGRES_URL")
 
 	if connStr == "" {
+		log.Println("WARNING: POSTGRES_URL tidak ditemukan, menggunakan fallback localhost")
 		host := getEnv("DB_HOST", "localhost")
 		port := getEnv("DB_PORT", "5432")
 		user := getEnv("DB_USER", "postgres")
@@ -31,11 +32,10 @@ func InitDB() *sql.DB {
 
 	if err = db.Ping(); err != nil {
 		log.Println("Gagal db.Ping ke database:", err)
-		// Tidak menggunakan log.Fatalf agar fungsi serverless tidak crash total
-	} else {
-		log.Println("Berhasil terhubung ke database!")
+		return nil
 	}
 
+	log.Println("Berhasil terhubung ke PostgreSQL!")
 	return db
 }
 
