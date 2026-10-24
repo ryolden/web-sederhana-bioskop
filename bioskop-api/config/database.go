@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -15,9 +16,14 @@ func InitDB() *sql.DB {
 	}
 
 	if connStr == "" {
-		log.Println("[WARN] POSTGRES_URL / DATABASE_URL belum terbaca di Vercel.")
+		log.Println("[WARN] Variable POSTGRES_URL / DATABASE_URL belum diatur.")
 		return nil
 	}
+
+	// Hapus channel_binding otomatis agar kompatibel dengan driver Go lib/pq
+	connStr = strings.ReplaceAll(connStr, "channel_binding=require&", "")
+	connStr = strings.ReplaceAll(connStr, "&channel_binding=require", "")
+	connStr = strings.ReplaceAll(connStr, "?channel_binding=require", "?")
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
