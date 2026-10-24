@@ -15,11 +15,9 @@ var app *gin.Engine
 func init() {
 	gin.SetMode(gin.ReleaseMode)
 	app = gin.New()
-
-	// Recovery middleware mencegah serverless crash total saat ada panic
 	app.Use(gin.Recovery())
 
-	// Endpoint testing root (tanpa koneksi DB)
+	// Endpoint testing / health check
 	app.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
@@ -31,7 +29,7 @@ func init() {
 	if db == nil {
 		app.GET("/bioskop", func(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Gagal terhubung ke database. Periksa POSTGRES_URL di Vercel.",
+				"error": "Gagal terhubung ke database. Pastikan POSTGRES_URL dikonfigurasi di Vercel.",
 			})
 		})
 		return
