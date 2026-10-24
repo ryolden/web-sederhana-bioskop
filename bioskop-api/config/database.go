@@ -10,7 +10,6 @@ import (
 )
 
 func InitDB() *sql.DB {
-
 	connStr := os.Getenv("POSTGRES_URL")
 
 	if connStr == "" {
@@ -26,11 +25,15 @@ func InitDB() *sql.DB {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf("Gagal terhubung ke database: %v", err)
+		log.Println("Gagal sql.Open:", err)
+		return nil
 	}
 
 	if err = db.Ping(); err != nil {
-		log.Fatalf("Database tidak merespon: %v", err)
+		log.Println("Gagal db.Ping ke database:", err)
+		// Tidak menggunakan log.Fatalf agar fungsi serverless tidak crash total
+	} else {
+		log.Println("Berhasil terhubung ke database!")
 	}
 
 	return db
