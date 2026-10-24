@@ -14,7 +14,6 @@ func InitDB() *sql.DB {
 		connStr = os.Getenv("DATABASE_URL")
 	}
 
-	// Jika kosong, stop tanpa menyentuh 127.0.0.1
 	if connStr == "" {
 		log.Println("[WARN] POSTGRES_URL / DATABASE_URL belum terbaca di Vercel.")
 		return nil

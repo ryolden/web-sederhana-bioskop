@@ -21,7 +21,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	// Route root untuk health check diagnostic
+	// Route utama untuk cek status server
 	router.GET("/", func(c *gin.Context) {
 		hasEnv := os.Getenv("POSTGRES_URL") != "" || os.Getenv("DATABASE_URL") != ""
 		c.JSON(http.StatusOK, gin.H{
@@ -33,7 +33,7 @@ func main() {
 
 	db := config.InitDB()
 
-	// Hanya eksekusi DB jika db TIDAK nil
+	// Hanya inisialisasi route database jika koneksi DB berhasil
 	if db != nil {
 		defer db.Close()
 
