@@ -19,7 +19,12 @@ func main() {
 
 	router := gin.Default()
 
+	// Endpoints CRUD Bioskop
 	router.POST("/bioskop", bioskopHandler.CreateBioskop)
+	router.GET("/bioskop", bioskopHandler.GetAllBioskop)
+	router.GET("/bioskop/:id", bioskopHandler.GetBioskopByID)
+	router.PUT("/bioskop/:id", bioskopHandler.UpdateBioskop)
+	router.DELETE("/bioskop/:id", bioskopHandler.DeleteBioskop)
 
 	router.Run(":8081")
 }
